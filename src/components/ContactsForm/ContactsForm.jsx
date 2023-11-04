@@ -1,6 +1,10 @@
+import { useDispatch, useSelector } from 'react-redux';
 import { Formik } from 'formik';
 import * as Yup from 'yup';
+import Notiflix from 'notiflix';
 import { FormTitle, StyledForm, InputBox, InputLabel, StyledField, SubmitBtn, Error } from './ContactsForm.styled';
+import { getContacts } from 'redux/selectors';
+import { addContact } from 'redux/contactsSlice';
 
 const ContactSchema = Yup.object().shape({
   name: Yup.string()
@@ -21,7 +25,21 @@ const ContactSchema = Yup.object().shape({
      .required('Required'),
  });
 
-export const ContactsForm = ({ onSubmitForm }) => {
+export const ContactsForm = () => {
+  const contacts = useSelector(getContacts);
+  const dispatch = useDispatch();
+
+  const onSubmitForm = (values, helpers) => {
+    if (contacts.some(contact => contact.name === values.name)) {
+      Notiflix.Notify.failure('This person already exists');
+      helpers.resetForm();
+      return;
+    }
+
+    dispatch(addContact(values));
+    helpers.resetForm();
+  }
+
   return (
     <Formik
       initialValues={{ name: '', number: '' }}
